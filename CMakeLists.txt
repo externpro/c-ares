@@ -117,9 +117,9 @@ endif()
 ########################################
 # install
 install(TARGETS ${lib_name} EXPORT ${PROJECT_NAME}-targets
-  RUNTIME DESTINATION bin${NUMBITS}
-  ARCHIVE DESTINATION lib${NUMBITS}
-  LIBRARY DESTINATION lib${NUMBITS}
+  RUNTIME DESTINATION bin
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
   )
-install(EXPORT ${PROJECT_NAME}-targets DESTINATION lib${NUMBITS}/cmake)
+install(EXPORT ${PROJECT_NAME}-targets DESTINATION lib/cmake)
 install(FILES ${hdrs} DESTINATION include/cares)
