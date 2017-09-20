@@ -108,18 +108,29 @@ set(hdrs
 source_group(include FILES ${hdrs})
 list(APPEND ${lib_name}_libsrcs ${hdrs})
 ########################################
+# version
+if(NOT DEFINED CARES_VER)
+  set(CARES_VER ${VERSION})
+elseif(NOT ${CARES_VER} STREQUAL ${VERSION})
+  message(AUTHOR_WARNING "version passed in (${CARES_VER}) doesn't match version from configure.cmake (${VERSION})")
+endif()
+set(ver _${CARES_VER})
+set(verDir /${PROJECT_NAME}${ver})
+########################################
 # library
 add_definitions(-DCARES_STATICLIB)
 add_library(${lib_name} STATIC ${${lib_name}_libsrcs})
 if(DEFINED ARES_LIBS)
   target_link_libraries(${lib_name} ${ARES_LIBS})
 endif()
+set_target_properties(${lib_name} PROPERTIES OUTPUT_NAME ${lib_name}${ver})
 ########################################
 # install
-install(TARGETS ${lib_name} EXPORT ${PROJECT_NAME}-targets
+set(targetsFile ${PROJECT_NAME}${ver}-targets)
+install(TARGETS ${lib_name} EXPORT ${targetsFile}
   RUNTIME DESTINATION bin
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   )
-install(EXPORT ${PROJECT_NAME}-targets DESTINATION lib/cmake)
-install(FILES ${hdrs} DESTINATION include/cares)
+install(EXPORT ${targetsFile} DESTINATION lib/cmake)
+install(FILES ${hdrs} DESTINATION include${verDir}/${PROJECT_NAME})
