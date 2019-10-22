@@ -1,13 +1,11 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.12)
 project(cares)
 set(lib_name ${PROJECT_NAME})
 include(flags OPTIONAL)
 ########################################
 set_property(GLOBAL PROPERTY USE_FOLDERS ON) # enables MSVC Solution Folders
 include(configure.cmake)
-include_directories(${CMAKE_SOURCE_DIR})
 ########################################
-# library sources
 set(cmake
   ares_build.in
   ares_config.in
@@ -114,23 +112,32 @@ if(NOT DEFINED CARES_VER)
 elseif(NOT ${CARES_VER} STREQUAL ${VERSION})
   message(AUTHOR_WARNING "version passed in (${CARES_VER}) doesn't match version from configure.cmake (${VERSION})")
 endif()
-set(ver _${CARES_VER})
-set(verDir /${PROJECT_NAME}${ver})
+if(XP_INSTALL_DIRS)
+  set(ver _${CARES_VER})
+  set(CMAKE_INSTALL_INCLUDEDIR include/${PROJECT_NAME}${ver}/${PROJECT_NAME})
+endif()
+include(GNUInstallDirs)
 ########################################
-# library
-add_definitions(-DCARES_STATICLIB)
 add_library(${lib_name} STATIC ${${lib_name}_libsrcs})
+target_compile_definitions(${lib_name} PUBLIC -DCARES_STATICLIB)
+target_include_directories(${lib_name} PRIVATE ${CMAKE_SOURCE_DIR}
+  PUBLIC
+  $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>   #include <ares.h>
+  $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include/${PROJECT_NAME}${ver}> #include <cares/ares.h>
+  )
 if(DEFINED ARES_LIBS)
-  target_link_libraries(${lib_name} ${ARES_LIBS})
+  target_link_libraries(${lib_name} PRIVATE ${ARES_LIBS})
 endif()
 set_target_properties(${lib_name} PROPERTIES OUTPUT_NAME ${lib_name}${ver})
 ########################################
-# install
 set(targetsFile ${PROJECT_NAME}${ver}-targets)
 install(TARGETS ${lib_name} EXPORT ${targetsFile}
-  RUNTIME DESTINATION bin
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   )
-install(EXPORT ${targetsFile} DESTINATION lib/cmake)
-install(FILES ${hdrs} DESTINATION include${verDir}/${PROJECT_NAME})
+if(DEFINED XP_NAMESPACE)
+  set(nameSpace NAMESPACE ${XP_NAMESPACE}::)
+endif()
+install(EXPORT ${targetsFile} DESTINATION lib/cmake ${nameSpace})
+install(FILES ${hdrs} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
