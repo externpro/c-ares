@@ -13,6 +13,7 @@ PROJECT (c-ares LANGUAGES C VERSION "1.18.0" )
 # Set this version before release
 SET (CARES_VERSION "${PROJECT_VERSION}")
 
+INCLUDE (flags OPTIONAL)
 INCLUDE (GNUInstallDirs) # include this *AFTER* PROJECT(), otherwise paths are wrong.
 
 # This is for libtool compatibility, and specified in a form that is easily
