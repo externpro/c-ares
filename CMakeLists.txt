@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED (VERSION 3.1.0...3.21)
+CMAKE_MINIMUM_REQUIRED (VERSION 3.1.0...3.31)
 
 INCLUDE (CheckIncludeFiles)
 INCLUDE (CheckTypeSize)
@@ -13,8 +13,8 @@ PROJECT (c-ares LANGUAGES C VERSION "1.18.0" )
 # Set this version before release
 SET (CARES_VERSION "${PROJECT_VERSION}")
 
-INCLUDE (flags OPTIONAL)
 INCLUDE (GNUInstallDirs) # include this *AFTER* PROJECT(), otherwise paths are wrong.
+INCLUDE (xpflags)
 
 # This is for libtool compatibility, and specified in a form that is easily
 # translatable from libtool (even if the actual form doesn't make sense).
