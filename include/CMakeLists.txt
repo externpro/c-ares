@@ -4,5 +4,5 @@ CONFIGURE_FILE (ares_build.h.cmake ${PROJECT_BINARY_DIR}/ares_build.h)
 # Headers installation target
 IF (CARES_INSTALL)
 	SET (CARES_HEADERS ares.h ares_version.h "${PROJECT_BINARY_DIR}/ares_build.h" ares_rules.h ares_dns.h ares_nameser.h)
-	INSTALL (FILES ${CARES_HEADERS} COMPONENT Devel DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+	INSTALL (FILES ${CARES_HEADERS} COMPONENT ${XP_COMPONENT} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 ENDIF ()
