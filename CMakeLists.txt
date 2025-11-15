@@ -34,6 +34,7 @@ SET (CARES_LIB_VERSIONINFO "7:1:5")
 OPTION (CARES_STATIC     "Build as a static library"                                             OFF)
 OPTION (CARES_SHARED     "Build as a shared library"                                             ON)
 OPTION (CARES_INSTALL    "Create installation targets (chain builders may want to disable this)" ON)
+OPTION (CARES_PACKAGE    "Create installation package"                                           ON)
 OPTION (CARES_STATIC_PIC "Build the static library as PIC (position independent)"                OFF)
 OPTION (CARES_BUILD_TESTS "Build and run tests"                                                  OFF)
 OPTION (CARES_BUILD_CONTAINER_TESTS "Build and run container tests (implies CARES_BUILD_TESTS, Linux only)" OFF)
@@ -613,6 +614,21 @@ function(TRANSFORM_MAKEFILE_INC INPUT_FILE OUTPUT_FILE)
 	file(WRITE ${OUTPUT_FILE} ${MAKEFILE_INC_TEXT})
 endfunction()
 
+set(targetsFile ${PROJECT_NAME}-targets)
+if(DEFINED XP_NAMESPACE)
+  set(XP_OPT_INSTALL FALSE)
+  if(NOT DEFINED XP_INSTALL_CMAKEDIR)
+    set(XP_INSTALL_CMAKEDIR ${CMAKE_INSTALL_DATADIR}/cmake)
+  endif()
+  set(XP_COMPONENT devel)
+  xpPackageDevel(TARGETS_FILE ${targetsFile} LIBRARIES ${XP_NAMESPACE}::cares)
+else()
+  set(XP_NAMESPACE ${PROJECT_NAME})
+  set(XP_OPT_INSTALL TRUE)
+  set(XP_INSTALL_CMAKEDIR ${CMAKE_INSTALL_DATADIR}/cmake/${PROJECT_NAME})
+  set(XP_COMPONENT Devel)
+endif()
+
 # Directory for includes
 ADD_SUBDIRECTORY (include)
 
@@ -628,12 +644,6 @@ IF (CARES_BUILD_TESTS OR CARES_BUILD_CONTAINER_TESTS)
 	ADD_SUBDIRECTORY (test)
 ENDIF ()
 
-if(DEFINED XP_INSTALL_CMAKEDIR)
-  set(XP_OPT_INSTALL EXCLUDE_FROM_ALL)
-else()
-  set(XP_INSTALL_CMAKEDIR ${CMAKE_INSTALL_DATADIR}/cmake/${PROJECT_NAME})
-endif()
-
 # Export targets
 IF (CARES_INSTALL)
 	SET (CMAKECONFIG_INSTALL_DIR ${XP_INSTALL_CMAKEDIR})
@@ -645,8 +655,8 @@ IF (CARES_INSTALL)
 	)
 
 	WRITE_BASIC_PACKAGE_VERSION_FILE(${PROJECT_NAME}-config-version.cmake VERSION "${CARES_VERSION}" COMPATIBILITY SameMajorVersion)
-	INSTALL (EXPORT ${PROJECT_NAME}-targets COMPONENT Devel DESTINATION ${CMAKECONFIG_INSTALL_DIR} NAMESPACE ${PROJECT_NAME}::)
-	INSTALL (FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake" "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake" COMPONENT Devel DESTINATION ${CMAKECONFIG_INSTALL_DIR})
+	INSTALL (EXPORT ${targetsFile} COMPONENT ${XP_COMPONENT} DESTINATION ${CMAKECONFIG_INSTALL_DIR} NAMESPACE ${XP_NAMESPACE}::)
+	INSTALL (FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake" "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake" COMPONENT ${XP_COMPONENT} DESTINATION ${CMAKECONFIG_INSTALL_DIR})
 
 	# pkgconfig support
 	IF (NOT CARES_SHARED)
@@ -656,7 +666,9 @@ IF (CARES_INSTALL)
 		ENDFOREACH ()
 	ENDIF ()
 	CONFIGURE_FILE("libcares.pc.cmake" "libcares.pc" @ONLY)
-	INSTALL (FILES "${CMAKE_CURRENT_BINARY_DIR}/libcares.pc" ${XP_OPT_INSTALL} COMPONENT Devel DESTINATION "${CMAKE_INSTALL_DATADIR}/pkgconfig")
+	if(XP_OPT_INSTALL)
+	INSTALL (FILES "${CMAKE_CURRENT_BINARY_DIR}/libcares.pc" COMPONENT ${XP_COMPONENT} DESTINATION "${CMAKE_INSTALL_DATADIR}/pkgconfig")
+	endif()
 ENDIF ()
 
 
@@ -666,7 +678,7 @@ SET (CARES_FOUND 1 CACHE INTERNAL "CARES LIBRARY FOUND")
 SET (CARES_LIBRARIES ${PROJECT_NAME}::cares CACHE INTERNAL "CARES LIBRARIES")
 
 
-IF (CARES_INSTALL)
+IF (CARES_PACKAGE)
     # Package creation
     set( CPACK_PACKAGE_NAME ${PROJECT_NAME} )
     set( CPACK_PACKAGE_VENDOR "Daniel Stenberg" ) # Github project owner
