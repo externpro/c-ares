@@ -8,6 +8,7 @@ INCLUDE (CheckCSourceCompiles)
 INCLUDE (CheckStructHasMember)
 INCLUDE (CheckLibraryExists)
 
+set(CMAKE_PROJECT_TOP_LEVEL_INCLUDES .devcontainer/cmake/xproinc.cmake)
 PROJECT (c-ares LANGUAGES C VERSION "1.18.0" )
 
 # Set this version before release
