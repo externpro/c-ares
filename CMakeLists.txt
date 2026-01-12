@@ -15,7 +15,6 @@ PROJECT (c-ares LANGUAGES C VERSION "1.18.0" )
 SET (CARES_VERSION "${PROJECT_VERSION}")
 
 INCLUDE (GNUInstallDirs) # include this *AFTER* PROJECT(), otherwise paths are wrong.
-INCLUDE (xpflags)
 
 # This is for libtool compatibility, and specified in a form that is easily
 # translatable from libtool (even if the actual form doesn't make sense).
@@ -616,17 +615,20 @@ endfunction()
 
 set(targetsFile ${PROJECT_NAME}-targets)
 if(DEFINED XP_NAMESPACE)
-  set(XP_OPT_INSTALL FALSE)
-  if(NOT DEFINED XP_INSTALL_CMAKEDIR)
-    set(XP_INSTALL_CMAKEDIR ${CMAKE_INSTALL_DATADIR}/cmake)
-  endif()
-  set(XP_COMPONENT devel)
-  xpPackageDevel(TARGETS_FILE ${targetsFile} LIBRARIES ${XP_NAMESPACE}::cares)
+  xpExternPackage(NAMESPACE ${XP_NAMESPACE} ALIAS_NAMESPACE ${PROJECT_NAME}
+    TARGETS_FILE ${targetsFile} LIBRARIES cares
+    BASE cares-1_18_1 XPDIFF "patch"
+    WEB "http://c-ares.haxx.se/" UPSTREAM "github.com/c-ares/c-ares"
+    DESC "C library for asynchronous DNS requests (including name resolves)"
+    LICENSE "[MIT](http://c-ares.haxx.se/license.html 'MIT License')"
+    )
+  set(CMAKE_NAMESPACE ${XP_NAMESPACE})
+  set(CMAKE_OPT_INSTALL FALSE)
+  set(CMAKE_INSTALL_CMAKEDIR ${XP_INSTALL_CMAKEDIR})
 else()
-  set(XP_NAMESPACE ${PROJECT_NAME})
-  set(XP_OPT_INSTALL TRUE)
-  set(XP_INSTALL_CMAKEDIR ${CMAKE_INSTALL_DATADIR}/cmake/${PROJECT_NAME})
-  set(XP_COMPONENT Devel)
+  set(CMAKE_NAMESPACE ${PROJECT_NAME})
+  set(CMAKE_OPT_INSTALL TRUE)
+  set(CMAKE_INSTALL_CMAKEDIR ${CMAKE_INSTALL_DATADIR}/cmake/${PROJECT_NAME})
 endif()
 
 # Directory for includes
@@ -646,7 +648,7 @@ ENDIF ()
 
 # Export targets
 IF (CARES_INSTALL)
-	SET (CMAKECONFIG_INSTALL_DIR ${XP_INSTALL_CMAKEDIR})
+	SET (CMAKECONFIG_INSTALL_DIR ${CMAKE_INSTALL_CMAKEDIR})
 	INCLUDE (CMakePackageConfigHelpers)
 	CONFIGURE_PACKAGE_CONFIG_FILE (${PROJECT_NAME}-config.cmake.in ${PROJECT_NAME}-config.cmake
 		INSTALL_DESTINATION ${CMAKECONFIG_INSTALL_DIR}
@@ -655,8 +657,8 @@ IF (CARES_INSTALL)
 	)
 
 	WRITE_BASIC_PACKAGE_VERSION_FILE(${PROJECT_NAME}-config-version.cmake VERSION "${CARES_VERSION}" COMPATIBILITY SameMajorVersion)
-	INSTALL (EXPORT ${targetsFile} COMPONENT ${XP_COMPONENT} DESTINATION ${CMAKECONFIG_INSTALL_DIR} NAMESPACE ${XP_NAMESPACE}::)
-	INSTALL (FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake" "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake" COMPONENT ${XP_COMPONENT} DESTINATION ${CMAKECONFIG_INSTALL_DIR})
+	INSTALL (EXPORT ${targetsFile} COMPONENT Devel DESTINATION ${CMAKECONFIG_INSTALL_DIR} NAMESPACE ${CMAKE_NAMESPACE}::)
+	INSTALL (FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake" "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake" COMPONENT Devel DESTINATION ${CMAKECONFIG_INSTALL_DIR})
 
 	# pkgconfig support
 	IF (NOT CARES_SHARED)
@@ -666,8 +668,8 @@ IF (CARES_INSTALL)
 		ENDFOREACH ()
 	ENDIF ()
 	CONFIGURE_FILE("libcares.pc.cmake" "libcares.pc" @ONLY)
-	if(XP_OPT_INSTALL)
-	INSTALL (FILES "${CMAKE_CURRENT_BINARY_DIR}/libcares.pc" COMPONENT ${XP_COMPONENT} DESTINATION "${CMAKE_INSTALL_DATADIR}/pkgconfig")
+	if(CMAKE_OPT_INSTALL)
+	INSTALL (FILES "${CMAKE_CURRENT_BINARY_DIR}/libcares.pc" COMPONENT Devel DESTINATION "${CMAKE_INSTALL_DATADIR}/pkgconfig")
 	endif()
 ENDIF ()
 
